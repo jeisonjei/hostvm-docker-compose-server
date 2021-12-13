@@ -16,7 +16,7 @@ services:
     networks:
       - net
     ports:
-      - 8000:80
+      - 8001:80
     environment:
       - ConnectionStrings__def=Server=hostvm_db;Port=5432;Database=hostvm;Username=postgres;Password=1234
   postgres:
@@ -29,7 +29,7 @@ services:
     networks:
       - net
     ports:
-      - 5431:5432
+      - 5433:5432
     volumes:
       - ./data:/var/lib/postgresql/data
     healthcheck:
