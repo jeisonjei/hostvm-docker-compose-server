@@ -3,22 +3,36 @@ networks:
   net:
     driver: bridge
 services:
+  jaeger:
+    image: jaegertracing/all-in-one
+    networks:
+        - net
+    ports:
+        - "5775:5775/udp"
+        - "6831:6831/udp"
+        - "6832:6832/udp"
+        - "5778:5778"
+        - "16686:16686"
+        - "14268:14268"
+        - "9411:9411"
   hostvmadmin:
     image: jeisonj2019/hostvmadmin
-    #image: ${DOCKER_REGISTRY-}hostvmadmin
-    #build:
-    #  context: .
-    #  dockerfile: HostvmAdmin/Dockerfile
     container_name: hostvm_app
     depends_on:
       postgres:
         condition: service_healthy
+      jaeger:
+        condition: service_started
     networks:
       - net
     ports:
-      - 8001:80
+      - 8000:80
     environment:
       - ConnectionStrings__def=Server=hostvm_db;Port=5432;Database=hostvm;Username=postgres;Password=1234
+      - JAEGER_SERVICE_NAME=HostvmAdmin
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=6831
+      - JAEGER_SAMPLER_MANAGER_HOST_PORT=jaeger:5778
   postgres:
     image: postgres
     container_name: hostvm_db
@@ -29,7 +43,7 @@ services:
     networks:
       - net
     ports:
-      - 5433:5432
+      - 5431:5432
     volumes:
       - ./data:/var/lib/postgresql/data
     healthcheck:
