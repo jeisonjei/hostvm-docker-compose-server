@@ -2,38 +2,43 @@ version: '3.4'
 networks:
   net:
     driver: bridge
+volumes:
+  db_data:
+    driver: local
+    driver_opts:
+        type: none
+        o: bind
+        device: ./volume_db_data
+  prometheus_data:
+    driver: local
+    driver_opts:
+        type: none
+        o: bind
+        device: ./volume_prometheus_data
+  grafana_data:
+    driver: local
+    driver_opts:
+        type: none
+        o: bind
+        device: ./volume_grafana_data
 services:
-  jaeger:
-    image: jaegertracing/all-in-one
-    networks:
-        - net
-    ports:
-        - "5775:5775/udp"
-        - "6831:6831/udp"
-        - "6832:6832/udp"
-        - "5778:5778"
-        - "16686:16686"
-        - "14268:14268"
-        - "9411:9411"
-  hostvmadmin:
+  web:
     image: jeisonj2019/hostvmadmin
+    build:
+      context: .
+      dockerfile: HostvmAdmin/Dockerfile
     container_name: hostvm_app
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
-      jaeger:
-        condition: service_started
     networks:
       - net
     ports:
       - 8000:80
     environment:
       - ConnectionStrings__def=Server=hostvm_db;Port=5432;Database=hostvm;Username=postgres;Password=1234
-      - JAEGER_SERVICE_NAME=HostvmAdmin
-      - JAEGER_AGENT_HOST=jaeger
-      - JAEGER_AGENT_PORT=6831
-      - JAEGER_SAMPLER_MANAGER_HOST_PORT=jaeger:5778
-  postgres:
+      - ASPNETCORE_ENVIRONMENT=Development
+  db:
     image: postgres
     container_name: hostvm_db
     restart: always
@@ -43,12 +48,46 @@ services:
     networks:
       - net
     ports:
-      - 5431:5432
+      - 5432:5432
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 20s
       timeout: 10s
       retries: 3
       start_period: 10s
+  prometheus:
+    image: prom/prometheus
+    container_name: lkhostvm_prometheus
+    depends_on:
+      - web
+      - db
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    user: "root"
+    command: 
+      --web.enable-lifecycle 
+      --config.file=/etc/prometheus/prometheus.yml
+    networks:
+    - net
+  grafana:
+    image: grafana/grafana
+    container_name: lkhostvm_grafana
+    depends_on:
+        - web
+        - db
+    ports:
+      - 3000:3000
+    volumes:
+        - grafana_data:/var/lib/grafana
+    user: "root"
+    networks:
+      - net 
+    environment: 
+        - HTTP_USER="{{grafana_user}}"
+        - HTTP_PASS="{{grafana_password}}"
+    restart: always
