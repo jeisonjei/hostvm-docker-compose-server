@@ -24,9 +24,6 @@ volumes:
 services:
   web:
     image: jeisonj2019/hostvmadmin
-    build:
-      context: .
-      dockerfile: HostvmAdmin/Dockerfile
     container_name: hostvm_app
     depends_on:
       db:
