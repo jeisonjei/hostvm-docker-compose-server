@@ -47,9 +47,7 @@ services:
         networks:
           - net
         ports:
-          - 5432:5432
-        expose:
-            - 5432
+          - 5431:5432
         volumes:
           - db_data:/var/lib/postgresql/data
         healthcheck:
@@ -66,8 +64,6 @@ services:
           - db
         ports:
           - 9090:9090
-        expose: 
-            - 9090
         volumes:
           - ./prometheus:/etc/prometheus
           - prometheus_data:/prometheus
