@@ -33,7 +33,7 @@ services:
     ports:
       - 8000:5000
     environment:
-      - ConnectionStrings__def=Server=hostvm_db;Port=5432;Database=hostvm-admin;Username=postgres;Password=1234
+      - ConnectionStrings__def=Server=hostvm_db;Port=5432;Database=HostvmAdmin;Username=postgres;Password=1234
       - ASPNETCORE_ENVIRONMENT=Development
       - Logging__Console__FormatterName=simple
   db:
