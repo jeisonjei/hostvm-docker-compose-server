@@ -15,5 +15,5 @@ scrape_configs:
     static_configs:
       # - targets: ['host.docker.internal:8000']
       - targets: 
-        - "10.1.97.138:8000"
+        - "10.1.97.53:8000"
     
